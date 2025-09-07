@@ -9,21 +9,22 @@ import {
   SidebarMenuItem,
   SidebarSeparator
 } from '@/components/ui/sidebar';
-import { Wallet, PlusCircle } from 'lucide-react';
+import { Wallet, PlusCircle, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TransactionDialog } from './transaction-dialog';
 import { CategoryManager } from './category-manager';
 import { BudgetToolDialog } from './budget-tool-dialog';
 import { DataExport } from './data-export';
+import Link from 'next/link';
 
 export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader className="p-4">
-        <div className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2">
             <Wallet className="w-8 h-8 text-primary" />
             <h1 className="text-2xl font-semibold">BudgetWise</h1>
-        </div>
+        </Link>
       </SidebarHeader>
       <SidebarContent className="p-2">
         <SidebarMenu>
@@ -42,6 +43,15 @@ export function AppSidebar() {
           <SidebarSeparator />
           <SidebarMenuItem>
             <BudgetToolDialog />
+          </SidebarMenuItem>
+          <SidebarSeparator />
+          <SidebarMenuItem>
+            <Link href="/credit" passHref>
+                <Button variant="ghost" className="w-full justify-start">
+                    <CreditCard className="mr-2 h-4 w-4" />
+                    Credit Analysis
+                </Button>
+            </Link>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarContent>
