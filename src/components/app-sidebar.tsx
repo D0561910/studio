@@ -9,7 +9,7 @@ import {
   SidebarMenuItem,
   SidebarSeparator
 } from '@/components/ui/sidebar';
-import { Wallet, PlusCircle, BarChart } from 'lucide-react';
+import { Wallet, PlusCircle, BarChart, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TransactionDialog } from './transaction-dialog';
 import { CategoryManager } from './category-manager';
@@ -28,6 +28,15 @@ export function AppSidebar() {
       </SidebarHeader>
       <SidebarContent className="p-2">
         <SidebarMenu>
+            <SidebarMenuItem>
+                <Link href="/" passHref>
+                    <Button variant="ghost" className="w-full justify-start">
+                        <Home className="mr-2 h-4 w-4" />
+                        Dashboard
+                    </Button>
+                </Link>
+            </SidebarMenuItem>
+            <SidebarSeparator />
           <SidebarMenuItem>
             <TransactionDialog>
                 <Button className="w-full justify-start">
