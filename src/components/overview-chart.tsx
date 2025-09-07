@@ -12,9 +12,12 @@ import { Skeleton } from './ui/skeleton';
 export function OverviewChart() {
   const { transactions } = useAppContext();
   const [isLoading, setIsLoading] = useState(true);
+  const [skeletonHeights, setSkeletonHeights] = useState<number[]>([]);
 
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 750);
+    // Generate random heights only on the client, after the component has mounted
+    setSkeletonHeights(Array.from({ length: 7 }, () => Math.random() * 80 + 10));
     return () => clearTimeout(timer);
   }, []);
 
@@ -42,9 +45,9 @@ export function OverviewChart() {
             </CardHeader>
             <CardContent>
                 <div className="h-[350px] w-full flex items-end gap-2 px-4">
-                    {Array.from({ length: 7 }).map((_, i) => (
-                        <Skeleton key={i} className="h-full w-full" style={{height: `${Math.random() * 80 + 10}%`}} />
-                    ))}
+                    {skeletonHeights.length > 0 ? skeletonHeights.map((height, i) => (
+                        <Skeleton key={i} className="h-full w-full" style={{height: `${height}%`}} />
+                    )) : Array.from({ length: 7 }).map((_,i) => <Skeleton key={i} className="h-full w-full" />)}
                 </div>
             </CardContent>
         </Card>
