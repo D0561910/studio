@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -35,13 +35,7 @@ const formSchema = z.object({
 
 type CategoryFormValues = z.infer<typeof formSchema>;
 
-interface CategoryListProps {
-  categories: Category[];
-  handleDelete: (id: string) => void;
-  isDefaultCategory: (cat: Category) => boolean;
-}
-
-const CategoryList = React.memo(({ categories, handleDelete, isDefaultCategory }: CategoryListProps) => (
+const CategoryList = ({ categories, handleDelete, isDefaultCategory }: { categories: Category[], handleDelete: (id: string) => void, isDefaultCategory: (cat: Category) => boolean }) => (
     <ScrollArea className="h-[150px] rounded-md border p-2">
         <div className="space-y-2">
         {categories.map(cat => {
@@ -62,13 +56,12 @@ const CategoryList = React.memo(({ categories, handleDelete, isDefaultCategory }
         })}
         </div>
     </ScrollArea>
-));
-CategoryList.displayName = 'CategoryList';
+);
 
 
 export function CategoryManager() {
   const { incomeCategories, expenseCategories, addCategory, deleteCategory, defaultCategories } = useAppContext();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = React.useState(false);
   const { toast } = useToast();
 
   const form = useForm<CategoryFormValues>({
@@ -78,17 +71,16 @@ export function CategoryManager() {
 
   const onSubmit = (data: CategoryFormValues) => {
     addCategory(data);
-    toast({ title: 'Success', description: 'Category added successfully.' });
     form.reset({ ...form.getValues(), name: '', icon: '' });
   };
   
-  const handleDelete = useCallback((id: string) => {
+  const handleDelete = (id: string) => {
     deleteCategory(id);
-  }, [deleteCategory]);
+  }
   
-  const isDefaultCategory = useCallback((category: Category) => {
+  const isDefaultCategory = (category: Category) => {
     return defaultCategories.some(dc => dc.name === category.name && dc.type === category.type);
-  }, [defaultCategories]);
+  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -170,7 +162,7 @@ export function CategoryManager() {
                             <FormControl>
                             <SelectTrigger>
                                 <SelectValue placeholder="Select icon" />
-                            </Trigger>
+                            </SelectTrigger>
                             </FormControl>
                             <SelectContent>
                             {Object.keys(Icons).map(iconKey => {
