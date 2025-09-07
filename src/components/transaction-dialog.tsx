@@ -74,28 +74,26 @@ export function TransactionDialog({ transaction, children }: TransactionDialogPr
 
 
   useEffect(() => {
-    if (transaction) {
-      form.reset({
-        ...transaction,
-        amount: Math.abs(transaction.amount),
-        date: new Date(transaction.date),
-      });
-    } else {
+    // Reset form when dialog opens for a new transaction or for a different transaction
+    if (open) {
+      if (transaction) {
         form.reset({
-            type: 'expense',
-            amount: 0,
-            date: new Date(),
-            description: '',
-            category: undefined,
-            paymentType: 'cash',
+          ...transaction,
+          amount: Math.abs(transaction.amount),
+          date: new Date(transaction.date),
         });
+      } else {
+          form.reset({
+              type: 'expense',
+              amount: 0,
+              date: new Date(),
+              description: '',
+              category: undefined,
+              paymentType: 'cash',
+          });
+      }
     }
   }, [transaction, form, open]);
-
-  // Reset category if type changes
-  useEffect(() => {
-    form.setValue('category', '');
-  }, [transactionType, form]);
 
   const onSubmit = (data: TransactionFormValues) => {
     const transactionData = {
@@ -134,7 +132,10 @@ export function TransactionDialog({ transaction, children }: TransactionDialogPr
                   <FormLabel>Type</FormLabel>
                   <FormControl>
                     <RadioGroup
-                      onValueChange={field.onChange}
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        form.setValue('category', ''); // Reset category on type change
+                      }}
                       defaultValue={field.value}
                       className="flex gap-4"
                     >
