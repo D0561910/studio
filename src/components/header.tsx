@@ -10,9 +10,7 @@ import { usePathname } from 'next/navigation';
 export function Header() {
   const pathname = usePathname();
   let title = 'Dashboard';
-  if (pathname === '/credit') {
-    title = 'Expense Analysis';
-  } else if (pathname === '/spending-distribution') {
+  if (pathname === '/spending-distribution') {
     title = 'Spending Distribution';
   }
 
