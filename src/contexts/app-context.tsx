@@ -4,19 +4,30 @@ import type { ReactNode } from 'react';
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import type { Transaction, Category } from '@/lib/types';
 import { db } from '@/lib/firebase';
-import { ref, onValue, set, push, remove } from 'firebase/database';
+import { 
+  collection, 
+  onSnapshot, 
+  addDoc, 
+  doc, 
+  updateDoc, 
+  deleteDoc, 
+  query, 
+  orderBy,
+  where,
+  writeBatch
+} from 'firebase/firestore';
 import { useAuth } from './auth-context';
 import { useToast } from '@/hooks/use-toast';
 
-const defaultCategories: Category[] = [
-  { id: 'cat_1', name: 'Groceries', icon: 'groceries' },
-  { id: 'cat_2', name: 'Transport', icon: 'transport' },
-  { id: 'cat_3', name: 'Housing', icon: 'housing' },
-  { id: 'cat_4', name: 'Entertainment', icon: 'entertainment' },
-  { id: 'cat_5', name: 'Salary', icon: 'salary' },
-  { id: 'cat_6', name: 'Bills', icon: 'bills' },
-  { id: 'cat_7', name: 'Shopping', icon: 'shopping'},
-  { id: 'cat_8', name: 'Other', icon: 'other' },
+const defaultCategories: Omit<Category, 'id'>[] = [
+  { name: 'Groceries', icon: 'groceries' },
+  { name: 'Transport', icon: 'transport' },
+  { name: 'Housing', icon: 'housing' },
+  { name: 'Entertainment', icon: 'entertainment' },
+  { name: 'Salary', icon: 'salary' },
+  { name: 'Bills', icon: 'bills' },
+  { name: 'Shopping', icon: 'shopping'},
+  { name: 'Other', icon: 'other' },
 ];
 
 interface AppContextType {
@@ -27,7 +38,7 @@ interface AppContextType {
   categories: Category[];
   addCategory: (category: Omit<Category, 'id'>) => void;
   deleteCategory: (id: string) => void;
-  defaultCategories: Category[];
+  defaultCategories: Omit<Category, 'id'>[];
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -36,45 +47,41 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [categories, setCategories] = useState<Category[]>(defaultCategories);
+  const [categories, setCategories] = useState<Category[]>([]);
 
   const userId = user?.uid;
 
-  const writeDefaultCategories = useCallback((uid: string) => {
-      const categoriesRef = ref(db, `users/${uid}/categories`);
-      const defaultCatsForDb = defaultCategories.reduce((acc, cat) => {
-          acc[cat.id] = { name: cat.name, icon: cat.icon };
-          return acc;
-      }, {} as {[key: string]: {name: string, icon: string}});
-
-      set(categoriesRef, defaultCatsForDb);
+  const writeDefaultCategories = useCallback(async (uid: string) => {
+    const categoriesRef = collection(db, 'users', uid, 'categories');
+    const batch = writeBatch(db);
+    defaultCategories.forEach(category => {
+      const docRef = doc(categoriesRef);
+      batch.set(docRef, category);
+    });
+    await batch.commit();
   }, []);
 
   useEffect(() => {
     if (!userId) {
       setTransactions([]);
-      setCategories(defaultCategories);
+      setCategories([]);
       return;
     }
 
-    const transactionsRef = ref(db, `users/${userId}/transactions`);
-    const categoriesRef = ref(db, `users/${userId}/categories`);
+    const transactionsQuery = query(collection(db, `users/${userId}/transactions`), orderBy('date', 'desc'));
+    const categoriesQuery = query(collection(db, `users/${userId}/categories`), orderBy('name'));
 
-    const unsubscribeTransactions = onValue(transactionsRef, (snapshot) => {
-      const data = snapshot.val();
-      const loadedTransactions: Transaction[] = data 
-        ? Object.entries(data).map(([id, value]) => ({ id, ...(value as Omit<Transaction, 'id'>) }))
-        : [];
-      setTransactions(loadedTransactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+    const unsubscribeTransactions = onSnapshot(transactionsQuery, (snapshot) => {
+      const loadedTransactions: Transaction[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction));
+      setTransactions(loadedTransactions);
     });
-    
-    const unsubscribeCategories = onValue(categoriesRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        const loadedCategories: Category[] = Object.entries(data).map(([id, value]) => ({ id, ...(value as Omit<Category, 'id'>) }));
-        setCategories(loadedCategories);
+
+    const unsubscribeCategories = onSnapshot(categoriesQuery, (snapshot) => {
+      if (snapshot.empty) {
+        writeDefaultCategories(userId);
       } else {
-        writeDefaultCategories(userId)
+        const loadedCategories = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Category));
+        setCategories(loadedCategories);
       }
     });
 
@@ -85,24 +92,25 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   }, [userId, writeDefaultCategories]);
   
 
-  const addTransaction = (transaction: Omit<Transaction, 'id'>) => {
+  const addTransaction = async (transaction: Omit<Transaction, 'id'>) => {
     if (!userId) return;
-    const newTransactionRef = push(ref(db, `users/${userId}/transactions`));
-    set(newTransactionRef, transaction);
+    await addDoc(collection(db, `users/${userId}/transactions`), transaction);
   };
 
-  const updateTransaction = (updatedTransaction: Transaction) => {
+  const updateTransaction = async (updatedTransaction: Transaction) => {
     if (!userId) return;
     const { id, ...data } = updatedTransaction;
-    set(ref(db, `users/${userId}/transactions/${id}`), data);
+    const docRef = doc(db, `users/${userId}/transactions`, id);
+    await updateDoc(docRef, data);
   };
 
-  const deleteTransaction = (id: string) => {
+  const deleteTransaction = async (id: string) => {
     if (!userId) return;
-    remove(ref(db, `users/${userId}/transactions/${id}`));
+    const docRef = doc(db, `users/${userId}/transactions`, id);
+    await deleteDoc(docRef);
   };
 
-  const addCategory = (category: Omit<Category, 'id'>) => {
+  const addCategory = async (category: Omit<Category, 'id'>) => {
     if (!userId) return;
     if (categories.some(c => c.name.toLowerCase() === category.name.toLowerCase())) {
         toast({
@@ -112,18 +120,17 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         });
         return;
     }
-    const newCategoryRef = push(ref(db, `users/${userId}/categories`));
-    set(newCategoryRef, category);
+    await addDoc(collection(db, `users/${userId}/categories`), category);
+    toast({ title: 'Success', description: 'Category added successfully.' });
   };
 
-  const deleteCategory = (id: string) => {
+  const deleteCategory = async (id: string) => {
     if (!userId) return;
     
     const categoryToDelete = categories.find(c => c.id === id);
     if (!categoryToDelete) return;
     
-    // Check if it is a default category by name
-    if (defaultCategories.some(dc => dc.name === categoryToDelete.name)) {
+    if (defaultCategories.some(dc => dc.name.toLowerCase() === categoryToDelete.name.toLowerCase())) {
         toast({
             variant: "destructive",
             title: "Error",
@@ -142,8 +149,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         return;
     }
 
-    remove(ref(db, `users/${userId}/categories/${id}`));
+    const docRef = doc(db, `users/${userId}/categories`, id);
+    await deleteDoc(docRef);
   };
+  
+  const mappedDefaultCategories = categories.filter(c => defaultCategories.some(dc => dc.name === c.name));
 
   return (
     <AppContext.Provider
