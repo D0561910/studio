@@ -15,12 +15,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-  } from "@/components/ui/dropdown-menu"
 import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { useAppContext } from '@/contexts/app-context';
@@ -46,6 +40,7 @@ export function RecentTransactions() {
             <TableRow>
               <TableHead>Category</TableHead>
               <TableHead>Date</TableHead>
+              <TableHead>Payment Type</TableHead>
               <TableHead className="text-right">Amount</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -68,6 +63,9 @@ export function RecentTransactions() {
                             </div>
                         </TableCell>
                         <TableCell>{format(new Date(transaction.date), 'MMM d, yyyy')}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="capitalize">{transaction.paymentType}</Badge>
+                        </TableCell>
                         <TableCell className="text-right">
                         <Badge variant={transaction.type === 'income' ? 'default' : 'secondary'} className={`${transaction.type === 'income' ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300'}`}>
                             {transaction.type === 'income' ? '+' : '-'}
@@ -89,7 +87,7 @@ export function RecentTransactions() {
               })
             ) : (
               <TableRow>
-                <TableCell colSpan={4} className="h-24 text-center">
+                <TableCell colSpan={5} className="h-24 text-center">
                   No transactions yet.
                 </TableCell>
               </TableRow>

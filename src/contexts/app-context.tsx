@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useEffect } from 'react';
 import type { Transaction, Category } from '@/lib/types';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 
@@ -31,6 +31,19 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [transactions, setTransactions] = useLocalStorage<Transaction[]>('transactions', []);
   const [categories, setCategories] = useLocalStorage<Category[]>('categories', defaultCategories);
+
+  useEffect(() => {
+    // Simple migration for existing transactions without paymentType
+    const transactionsNeedMigration = transactions.some(t => !t.paymentType);
+    if (transactionsNeedMigration) {
+      setTransactions(prev =>
+        prev.map(t => ({
+          ...t,
+          paymentType: t.paymentType || 'cash',
+        }))
+      );
+    }
+  }, [transactions, setTransactions]);
 
   const addTransaction = (transaction: Omit<Transaction, 'id'>) => {
     const newTransaction = { ...transaction, id: `txn_${new Date().toISOString()}` };

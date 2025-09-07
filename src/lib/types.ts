@@ -5,6 +5,7 @@ export type Transaction = {
   category: string;
   date: string; // ISO string
   description?: string;
+  paymentType: 'cash' | 'credit';
 };
 
 export type Category = {
