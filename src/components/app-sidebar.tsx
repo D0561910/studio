@@ -9,9 +9,8 @@ import {
   SidebarMenuItem,
   SidebarSeparator
 } from '@/components/ui/sidebar';
-import { Wallet, PlusCircle, BarChart, Home } from 'lucide-react';
+import { Wallet, BarChart, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { TransactionDialog } from './transaction-dialog';
 import { CategoryManager } from './category-manager';
 import { BudgetToolDialog } from './budget-tool-dialog';
 import { DataExport } from './data-export';
@@ -37,15 +36,6 @@ export function AppSidebar() {
                 </Link>
             </SidebarMenuItem>
             <SidebarSeparator />
-          <SidebarMenuItem>
-            <TransactionDialog>
-                <Button className="w-full justify-start">
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Add Transaction
-                </Button>
-            </TransactionDialog>
-          </SidebarMenuItem>
-          <SidebarSeparator />
           <SidebarMenuItem>
             <CategoryManager />
           </SidebarMenuItem>
