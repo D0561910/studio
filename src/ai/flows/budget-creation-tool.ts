@@ -18,7 +18,7 @@ const CreateBudgetInputSchema = z.object({
 export type CreateBudgetInput = z.infer<typeof CreateBudgetInputSchema>;
 
 const CreateBudgetOutputSchema = z.object({
-  budgetPlan: z.string().describe('Suggested budget plan as a JSON string.'),
+  budgetPlan: z.string().describe('Suggested budget plan as a JSON string. This should be an array of objects, each with a "category" and "allocated_budget" property.'),
   flaggedOverspending: z.boolean().describe('Whether the user is overspending relative to past history.'),
 });
 export type CreateBudgetOutput = z.infer<typeof CreateBudgetOutputSchema>;
@@ -37,7 +37,7 @@ const prompt = ai.definePrompt({
   Spending Data: {{{spendingData}}}
 
   Based on this information, create a budget plan and determine if the user is overspending relative to their past history.
-  Return the budget plan as a JSON string.
+  Return the budget plan as a JSON string representing an array of objects, where each object has a "category" and an "allocated_budget".
 `,
 });
 

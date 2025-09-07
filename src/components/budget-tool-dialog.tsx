@@ -68,7 +68,15 @@ export function BudgetToolDialog() {
   const parsedBudgetPlan: BudgetPlan[] | null = React.useMemo(() => {
     if (!result?.budgetPlan) return null;
     try {
-        return JSON.parse(result.budgetPlan);
+        const parsed = JSON.parse(result.budgetPlan);
+        // The AI might return a single object instead of an array of objects
+        const plan = Array.isArray(parsed) ? parsed : (parsed.budgetPlan || null);
+        
+        if (Array.isArray(plan)) {
+            return plan;
+        }
+        console.error("Parsed budget plan is not in the expected array format", parsed);
+        return null;
     } catch (e) {
         console.error("Failed to parse budget plan JSON", e);
         return null;
@@ -108,7 +116,7 @@ export function BudgetToolDialog() {
             </div>
           )}
 
-          {result && parsedBudgetPlan && (
+          {result && parsedBudgetPlan && Array.isArray(parsedBudgetPlan) && (
             <div className="space-y-4">
               {result.flaggedOverspending && (
                 <Alert variant="destructive">
@@ -147,7 +155,7 @@ export function BudgetToolDialog() {
              <Alert variant="destructive">
                 <AlertTitle>Analysis Failed</AlertTitle>
                 <AlertDescription>
-                    The AI assistant was unable to generate a budget plan. This might be due to a parsing error.
+                    The AI assistant was unable to generate a budget plan. This might be due to a formatting or parsing error.
                 </AlertDescription>
             </Alert>
           )}
