@@ -12,7 +12,12 @@ export function Header() {
   let title = 'Dashboard';
   if (pathname === '/spending-distribution') {
     title = 'Spending Distribution';
+  } else if (pathname === '/category-distribution') {
+    title = 'Category Distribution';
+  } else if (pathname === '/income-expense-distribution') {
+    title = 'Income vs. Expense Distribution';
   }
+
 
   return (
     <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6">

@@ -9,7 +9,7 @@ import {
   SidebarMenuItem,
   SidebarSeparator
 } from '@/components/ui/sidebar';
-import { Wallet, Home, PieChart } from 'lucide-react';
+import { Wallet, Home, PieChart, Shapes, ArrowRightLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CategoryManager } from './category-manager';
 import { BudgetToolDialog } from './budget-tool-dialog';
@@ -41,6 +41,22 @@ export function AppSidebar() {
                     <Button variant="ghost" className="w-full justify-start">
                         <PieChart className="mr-2 h-4 w-4" />
                         Spending Distribution
+                    </Button>
+                </Link>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+                <Link href="/category-distribution" passHref>
+                    <Button variant="ghost" className="w-full justify-start">
+                        <Shapes className="mr-2 h-4 w-4" />
+                        Category Distribution
+                    </Button>
+                </Link>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+                <Link href="/income-expense-distribution" passHref>
+                    <Button variant="ghost" className="w-full justify-start">
+                        <ArrowRightLeft className="mr-2 h-4 w-4" />
+                        Income vs. Expense
                     </Button>
                 </Link>
             </SidebarMenuItem>
