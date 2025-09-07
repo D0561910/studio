@@ -4,10 +4,21 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
 import { subDays, format } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ChartTooltipContent } from '@/components/ui/chart';
+import { ChartTooltipContent, ChartContainer, type ChartConfig } from '@/components/ui/chart';
 import { useAppContext } from '@/contexts/app-context';
 import { formatCurrency } from '@/lib/utils';
 import { Skeleton } from './ui/skeleton';
+
+const chartConfig = {
+  income: {
+    label: "Income",
+    color: "hsl(var(--chart-1))",
+  },
+  expense: {
+    label: "Expense",
+    color: "hsl(var(--chart-2))",
+  },
+} satisfies ChartConfig
 
 export function OverviewChart() {
   const { transactions } = useAppContext();
@@ -17,7 +28,9 @@ export function OverviewChart() {
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 750);
     // Generate random heights only on the client, after the component has mounted
-    setSkeletonHeights(Array.from({ length: 7 }, () => Math.random() * 80 + 10));
+    if (typeof window !== 'undefined') {
+        setSkeletonHeights(Array.from({ length: 7 }, () => Math.random() * 80 + 10));
+    }
     return () => clearTimeout(timer);
   }, []);
 
@@ -61,30 +74,30 @@ export function OverviewChart() {
         <CardDescription>Income and expenses for the last 7 days.</CardDescription>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={350}>
-          <BarChart data={data}>
-            <XAxis
-              dataKey="date"
-              stroke="#888888"
-              fontSize={12}
-              tickLine={false}
-              axisLine={false}
-            />
-            <YAxis
-              stroke="#888888"
-              fontSize={12}
-              tickLine={false}
-              axisLine={false}
-              tickFormatter={(value) => formatCurrency(value)}
-            />
-            <Tooltip
-              cursor={{ fill: 'hsl(var(--muted))' }}
-              content={<ChartTooltipContent formatter={(value, name) => <span>{`${name.charAt(0).toUpperCase() + name.slice(1)}: ${formatCurrency(Number(value))}`}</span>} />}
-            />
-            <Bar dataKey="income" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} name="Income" />
-            <Bar dataKey="expense" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} name="Expense" />
-          </BarChart>
-        </ResponsiveContainer>
+        <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
+            <BarChart accessibilityLayer data={data}>
+                <XAxis
+                dataKey="date"
+                stroke="#888888"
+                fontSize={12}
+                tickLine={false}
+                axisLine={false}
+                />
+                <YAxis
+                stroke="#888888"
+                fontSize={12}
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={(value) => formatCurrency(value)}
+                />
+                <Tooltip
+                cursor={{ fill: 'hsl(var(--muted))' }}
+                content={<ChartTooltipContent formatter={(value, name) => <span>{`${name.charAt(0).toUpperCase() + name.slice(1)}: ${formatCurrency(Number(value))}`}</span>} />}
+                />
+                <Bar dataKey="income" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} name="Income" />
+                <Bar dataKey="expense" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} name="Expense" />
+            </BarChart>
+        </ChartContainer>
       </CardContent>
     </Card>
   );
