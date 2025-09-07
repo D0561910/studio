@@ -1,5 +1,4 @@
 import {
-  Utensils,
   Car,
   Home,
   Film,
@@ -17,26 +16,41 @@ import {
   Receipt,
   GraduationCap,
   Shirt,
-  Dumbbell
+  Dumbbell,
+  Ticket,
+  Utensils,
+  Droplet
 } from 'lucide-react';
 
 export const Icons: Record<string, LucideIcon> = {
+  // Expenses
+  bills: Receipt,
+  clothes: Shirt,
+  drink: Droplet,
+  food: Utensils,
+  house: Home,
+  shopping: ShoppingCart,
+  travel: Plane,
+
+  // Income
+  investments: Landmark,
+  extra_income: Wallet,
+  lottery: Ticket,
+  gifts: Gift,
+  salary: Briefcase,
+  savings: PiggyBank,
+  
+  // Generic / Default
+  other: CircleDollarSign,
   groceries: ShoppingCart,
   transport: Car,
   housing: Home,
   entertainment: Film,
   health: HeartPulse,
   education: GraduationCap,
-  travel: Plane,
   work: Briefcase,
-  gifts: Gift,
-  salary: Landmark,
-  investments: PiggyBank,
   freelance: Wallet,
-  bills: Receipt,
-  shopping: Shirt,
   fitness: Dumbbell,
-  other: CircleDollarSign,
 };
 
 export type IconKey = keyof typeof Icons;

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -45,7 +45,7 @@ interface TransactionDialogProps {
 }
 
 export function TransactionDialog({ transaction, children }: TransactionDialogProps) {
-  const { addTransaction, updateTransaction, categories } = useAppContext();
+  const { addTransaction, updateTransaction, incomeCategories, expenseCategories } = useAppContext();
   const [open, setOpen] = React.useState(false);
   const { toast } = useToast();
 
@@ -66,6 +66,13 @@ export function TransactionDialog({ transaction, children }: TransactionDialogPr
         },
   });
 
+  const transactionType = form.watch('type');
+
+  const categoriesToShow = useMemo(() => {
+    return transactionType === 'income' ? incomeCategories : expenseCategories;
+  }, [transactionType, incomeCategories, expenseCategories]);
+
+
   useEffect(() => {
     if (transaction) {
       form.reset({
@@ -83,7 +90,12 @@ export function TransactionDialog({ transaction, children }: TransactionDialogPr
             paymentType: 'cash',
         });
     }
-  }, [transaction, form]);
+  }, [transaction, form, open]);
+
+  // Reset category if type changes
+  useEffect(() => {
+    form.setValue('category', '');
+  }, [transactionType, form]);
 
   const onSubmit = (data: TransactionFormValues) => {
     const transactionData = {
@@ -164,14 +176,14 @@ export function TransactionDialog({ transaction, children }: TransactionDialogPr
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Category</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select a category" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {categories.map(cat => (
+                        {categoriesToShow.map(cat => (
                           <SelectItem key={cat.id} value={cat.name}>
                             {cat.name}
                           </SelectItem>

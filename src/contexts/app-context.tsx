@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import type { Transaction, Category } from '@/lib/types';
 import { db } from '@/lib/firebase';
 import { 
@@ -13,22 +13,31 @@ import {
   deleteDoc, 
   query, 
   orderBy,
-  where,
   writeBatch
 } from 'firebase/firestore';
 import { useAuth } from './auth-context';
 import { useToast } from '@/hooks/use-toast';
 
-const defaultCategories: Omit<Category, 'id'>[] = [
-  { name: 'Groceries', icon: 'groceries' },
-  { name: 'Transport', icon: 'transport' },
-  { name: 'Housing', icon: 'housing' },
-  { name: 'Entertainment', icon: 'entertainment' },
-  { name: 'Salary', icon: 'salary' },
+const defaultExpenseCategories: Omit<Category, 'id' | 'type'>[] = [
   { name: 'Bills', icon: 'bills' },
-  { name: 'Shopping', icon: 'shopping'},
+  { name: 'Clothes', icon: 'shopping' },
+  { name: 'Drink', icon: 'other' },
+  { name: 'Food', icon: 'groceries' },
+  { name: 'House', icon: 'housing' },
   { name: 'Other', icon: 'other' },
+  { name: 'Shopping', icon: 'shopping'},
+  { name: 'Travel', icon: 'travel' },
 ];
+
+const defaultIncomeCategories: Omit<Category, 'id' | 'type'>[] = [
+    { name: 'Investments', icon: 'investments' },
+    { name: 'Extra income', icon: 'freelance' },
+    { name: 'Lottery', icon: 'gift' },
+    { name: 'Gifts', icon: 'gift' },
+    { name: 'Salary', icon: 'salary' },
+    { name: 'Savings', icon: 'piggyBank' },
+];
+
 
 interface AppContextType {
   transactions: Transaction[];
@@ -36,9 +45,11 @@ interface AppContextType {
   updateTransaction: (transaction: Transaction) => void;
   deleteTransaction: (id: string) => void;
   categories: Category[];
+  incomeCategories: Category[];
+  expenseCategories: Category[];
   addCategory: (category: Omit<Category, 'id'>) => void;
   deleteCategory: (id: string) => void;
-  defaultCategories: Omit<Category, 'id'>[];
+  defaultCategories: Category[];
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -54,10 +65,17 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const writeDefaultCategories = useCallback(async (uid: string) => {
     const categoriesRef = collection(db, 'users', uid, 'categories');
     const batch = writeBatch(db);
-    defaultCategories.forEach(category => {
+    
+    defaultExpenseCategories.forEach(category => {
       const docRef = doc(categoriesRef);
-      batch.set(docRef, category);
+      batch.set(docRef, { ...category, type: 'expense' });
     });
+
+    defaultIncomeCategories.forEach(category => {
+        const docRef = doc(categoriesRef);
+        batch.set(docRef, { ...category, type: 'income' });
+    });
+
     await batch.commit();
   }, []);
 
@@ -112,11 +130,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const addCategory = async (category: Omit<Category, 'id'>) => {
     if (!userId) return;
-    if (categories.some(c => c.name.toLowerCase() === category.name.toLowerCase())) {
+    if (categories.some(c => c.name.toLowerCase() === category.name.toLowerCase() && c.type === category.type)) {
         toast({
             variant: "destructive",
             title: "Error",
-            description: "A category with this name already exists."
+            description: `A category with this name already exists for ${category.type}.`
         });
         return;
     }
@@ -130,7 +148,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const categoryToDelete = categories.find(c => c.id === id);
     if (!categoryToDelete) return;
     
-    if (defaultCategories.some(dc => dc.name.toLowerCase() === categoryToDelete.name.toLowerCase())) {
+    const isDefault = (categoryToDelete.type === 'income' 
+        ? defaultIncomeCategories 
+        : defaultExpenseCategories).some(dc => dc.name === categoryToDelete.name);
+
+    if (isDefault) {
         toast({
             variant: "destructive",
             title: "Error",
@@ -153,7 +175,15 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     await deleteDoc(docRef);
   };
   
-  const mappedDefaultCategories = categories.filter(c => defaultCategories.some(dc => dc.name === c.name));
+  const defaultCategories = useMemo(() => {
+    return [
+      ...defaultExpenseCategories.map(c => ({...c, id: c.name, type: 'expense' as const})),
+      ...defaultIncomeCategories.map(c => ({...c, id: c.name, type: 'income' as const})),
+    ];
+  }, []);
+
+  const incomeCategories = useMemo(() => categories.filter(c => c.type === 'income'), [categories]);
+  const expenseCategories = useMemo(() => categories.filter(c => c.type === 'expense'), [categories]);
 
   return (
     <AppContext.Provider
@@ -163,6 +193,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         updateTransaction,
         deleteTransaction,
         categories,
+        incomeCategories,
+        expenseCategories,
         addCategory,
         deleteCategory,
         defaultCategories,

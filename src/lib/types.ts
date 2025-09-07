@@ -12,4 +12,5 @@ export type Category = {
   id: string;
   name: string;
   icon: string; // Corresponds to a key in the Icons object
+  type: 'income' | 'expense';
 };
