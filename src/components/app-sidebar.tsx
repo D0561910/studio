@@ -17,8 +17,6 @@ import { DataExport } from './data-export';
 import Link from 'next/link';
 import { getAuth, signOut } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
-import { TransactionDialog } from './transaction-dialog';
-import { PlusCircle } from 'lucide-react';
 
 
 export function AppSidebar() {
