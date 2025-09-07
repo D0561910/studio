@@ -9,7 +9,7 @@ import {
   SidebarMenuItem,
   SidebarSeparator
 } from '@/components/ui/sidebar';
-import { Wallet, PlusCircle, CreditCard } from 'lucide-react';
+import { Wallet, PlusCircle, BarChart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TransactionDialog } from './transaction-dialog';
 import { CategoryManager } from './category-manager';
@@ -48,8 +48,8 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <Link href="/credit" passHref>
                 <Button variant="ghost" className="w-full justify-start">
-                    <CreditCard className="mr-2 h-4 w-4" />
-                    Credit Analysis
+                    <BarChart className="mr-2 h-4 w-4" />
+                    Expense Analysis
                 </Button>
             </Link>
           </SidebarMenuItem>
