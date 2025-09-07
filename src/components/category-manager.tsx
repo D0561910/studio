@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -61,7 +61,7 @@ const CategoryList = ({ categories, handleDelete, isDefaultCategory }: { categor
 
 export function CategoryManager() {
   const { incomeCategories, expenseCategories, addCategory, deleteCategory, defaultCategories } = useAppContext();
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = useState(false);
   const { toast } = useToast();
 
   const form = useForm<CategoryFormValues>({
