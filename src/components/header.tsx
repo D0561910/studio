@@ -12,6 +12,8 @@ export function Header() {
   let title = 'Dashboard';
   if (pathname === '/credit') {
     title = 'Expense Analysis';
+  } else if (pathname === '/spending-distribution') {
+    title = 'Spending Distribution';
   }
 
   return (

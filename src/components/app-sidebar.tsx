@@ -9,12 +9,14 @@ import {
   SidebarMenuItem,
   SidebarSeparator
 } from '@/components/ui/sidebar';
-import { Wallet, BarChart, Home } from 'lucide-react';
+import { Wallet, BarChart, Home, PieChart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CategoryManager } from './category-manager';
 import { BudgetToolDialog } from './budget-tool-dialog';
 import { DataExport } from './data-export';
 import Link from 'next/link';
+import { TransactionDialog } from './transaction-dialog';
+import { PlusCircle } from 'lucide-react';
 
 export function AppSidebar() {
   return (
@@ -36,15 +38,15 @@ export function AppSidebar() {
                 </Link>
             </SidebarMenuItem>
             <SidebarSeparator />
-          <SidebarMenuItem>
-            <CategoryManager />
-          </SidebarMenuItem>
-          <SidebarSeparator />
-          <SidebarMenuItem>
-            <BudgetToolDialog />
-          </SidebarMenuItem>
-          <SidebarSeparator />
-          <SidebarMenuItem>
+            <SidebarMenuItem>
+                <Link href="/spending-distribution" passHref>
+                    <Button variant="ghost" className="w-full justify-start">
+                        <PieChart className="mr-2 h-4 w-4" />
+                        Spending Distribution
+                    </Button>
+                </Link>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
             <Link href="/credit" passHref>
                 <Button variant="ghost" className="w-full justify-start">
                     <BarChart className="mr-2 h-4 w-4" />
@@ -52,6 +54,15 @@ export function AppSidebar() {
                 </Button>
             </Link>
           </SidebarMenuItem>
+          <SidebarSeparator />
+          <SidebarMenuItem>
+            <CategoryManager />
+          </SidebarMenuItem>
+          <SidebarSeparator />
+          <SidebarMenuItem>
+            <BudgetToolDialog />
+          </SidebarMenuItem>
+          
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter className="p-2">
