@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -35,7 +35,13 @@ const formSchema = z.object({
 
 type CategoryFormValues = z.infer<typeof formSchema>;
 
-const CategoryList = ({ categories, handleDelete, isDefaultCategory }: { categories: Category[], handleDelete: (id: string) => void, isDefaultCategory: (cat: Category) => boolean }) => (
+interface CategoryListProps {
+  categories: Category[];
+  handleDelete: (id: string) => void;
+  isDefaultCategory: (cat: Category) => boolean;
+}
+
+const CategoryList = React.memo(({ categories, handleDelete, isDefaultCategory }: CategoryListProps) => (
     <ScrollArea className="h-[150px] rounded-md border p-2">
         <div className="space-y-2">
         {categories.map(cat => {
@@ -56,7 +62,8 @@ const CategoryList = ({ categories, handleDelete, isDefaultCategory }: { categor
         })}
         </div>
     </ScrollArea>
-);
+));
+CategoryList.displayName = 'CategoryList';
 
 
 export function CategoryManager() {
@@ -71,16 +78,17 @@ export function CategoryManager() {
 
   const onSubmit = (data: CategoryFormValues) => {
     addCategory(data);
+    toast({ title: 'Success', description: 'Category added successfully.' });
     form.reset({ ...form.getValues(), name: '', icon: '' });
   };
   
-  const handleDelete = (id: string) => {
+  const handleDelete = useCallback((id: string) => {
     deleteCategory(id);
-  }
+  }, [deleteCategory]);
   
-  const isDefaultCategory = (category: Category) => {
+  const isDefaultCategory = useCallback((category: Category) => {
     return defaultCategories.some(dc => dc.name === category.name && dc.type === category.type);
-  }
+  }, [defaultCategories]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
