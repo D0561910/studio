@@ -6,6 +6,7 @@ import type { Transaction, Category } from '@/lib/types';
 import { db } from '@/lib/firebase';
 import { ref, onValue, set, push, remove } from 'firebase/database';
 import { useAuth } from './auth-context';
+import { useToast } from '@/hooks/use-toast';
 
 const defaultCategories: Category[] = [
   { id: 'cat_1', name: 'Groceries', icon: 'groceries' },
@@ -26,16 +27,28 @@ interface AppContextType {
   categories: Category[];
   addCategory: (category: Omit<Category, 'id'>) => void;
   deleteCategory: (id: string) => void;
+  defaultCategories: Category[];
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>(defaultCategories);
 
   const userId = user?.uid;
+
+  const writeDefaultCategories = useCallback((uid: string) => {
+      const categoriesRef = ref(db, `users/${uid}/categories`);
+      const defaultCatsForDb = defaultCategories.reduce((acc, cat) => {
+          acc[cat.id] = { name: cat.name, icon: cat.icon };
+          return acc;
+      }, {} as {[key: string]: {name: string, icon: string}});
+
+      set(categoriesRef, defaultCatsForDb);
+  }, []);
 
   useEffect(() => {
     if (!userId) {
@@ -61,9 +74,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         const loadedCategories: Category[] = Object.entries(data).map(([id, value]) => ({ id, ...(value as Omit<Category, 'id'>) }));
         setCategories(loadedCategories);
       } else {
-        // If no categories in DB, set default ones
-        set(ref(db, `users/${userId}/categories`), defaultCategories.reduce((acc, cat) => ({...acc, [cat.id]: {name: cat.name, icon: cat.icon}}), {}));
-        setCategories(defaultCategories);
+        writeDefaultCategories(userId)
       }
     });
 
@@ -71,7 +82,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       unsubscribeTransactions();
       unsubscribeCategories();
     };
-  }, [userId]);
+  }, [userId, writeDefaultCategories]);
   
 
   const addTransaction = (transaction: Omit<Transaction, 'id'>) => {
@@ -92,15 +103,45 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const addCategory = (category: Omit<Category, 'id'>) => {
-     if (!userId) return;
+    if (!userId) return;
+    if (categories.some(c => c.name.toLowerCase() === category.name.toLowerCase())) {
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "A category with this name already exists."
+        });
+        return;
+    }
     const newCategoryRef = push(ref(db, `users/${userId}/categories`));
     set(newCategoryRef, category);
   };
 
   const deleteCategory = (id: string) => {
     if (!userId) return;
-    // Check if default category
-    if(defaultCategories.some(c => c.id === id)) return;
+    
+    const categoryToDelete = categories.find(c => c.id === id);
+    if (!categoryToDelete) return;
+    
+    // Check if it is a default category by name
+    if (defaultCategories.some(dc => dc.name === categoryToDelete.name)) {
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Cannot delete a default category."
+        });
+        return;
+    }
+    
+    const categoryInUse = transactions.some(t => t.category === categoryToDelete.name);
+    if (categoryInUse) {
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Cannot delete category as it is currently used in transactions."
+        });
+        return;
+    }
+
     remove(ref(db, `users/${userId}/categories/${id}`));
   };
 
@@ -114,6 +155,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         categories,
         addCategory,
         deleteCategory,
+        defaultCategories,
       }}
     >
       {children}
