@@ -1,9 +1,11 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import React, { createContext, useContext, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import type { Transaction, Category } from '@/lib/types';
-import { useLocalStorage } from '@/hooks/use-local-storage';
+import { db } from '@/lib/firebase';
+import { ref, onValue, set, push, remove } from 'firebase/database';
+import { useAuth } from './auth-context';
 
 const defaultCategories: Category[] = [
   { id: 'cat_1', name: 'Groceries', icon: 'groceries' },
@@ -29,44 +31,77 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
-  const [transactions, setTransactions] = useLocalStorage<Transaction[]>('transactions', []);
-  const [categories, setCategories] = useLocalStorage<Category[]>('categories', defaultCategories);
+  const { user } = useAuth();
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [categories, setCategories] = useState<Category[]>(defaultCategories);
+
+  const userId = user?.uid;
 
   useEffect(() => {
-    // Simple migration for existing transactions without paymentType
-    const transactionsNeedMigration = transactions.some(t => !t.paymentType);
-    if (transactionsNeedMigration) {
-      setTransactions(prev =>
-        prev.map(t => ({
-          ...t,
-          paymentType: t.paymentType || 'cash',
-        }))
-      );
+    if (!userId) {
+      setTransactions([]);
+      setCategories(defaultCategories);
+      return;
     }
-  }, [transactions, setTransactions]);
+
+    const transactionsRef = ref(db, `users/${userId}/transactions`);
+    const categoriesRef = ref(db, `users/${userId}/categories`);
+
+    const unsubscribeTransactions = onValue(transactionsRef, (snapshot) => {
+      const data = snapshot.val();
+      const loadedTransactions: Transaction[] = data 
+        ? Object.entries(data).map(([id, value]) => ({ id, ...(value as Omit<Transaction, 'id'>) }))
+        : [];
+      setTransactions(loadedTransactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+    });
+    
+    const unsubscribeCategories = onValue(categoriesRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const loadedCategories: Category[] = Object.entries(data).map(([id, value]) => ({ id, ...(value as Omit<Category, 'id'>) }));
+        setCategories(loadedCategories);
+      } else {
+        // If no categories in DB, set default ones
+        set(ref(db, `users/${userId}/categories`), defaultCategories.reduce((acc, cat) => ({...acc, [cat.id]: {name: cat.name, icon: cat.icon}}), {}));
+        setCategories(defaultCategories);
+      }
+    });
+
+    return () => {
+      unsubscribeTransactions();
+      unsubscribeCategories();
+    };
+  }, [userId]);
+  
 
   const addTransaction = (transaction: Omit<Transaction, 'id'>) => {
-    const newTransaction = { ...transaction, id: `txn_${new Date().toISOString()}` };
-    setTransactions(prev => [newTransaction, ...prev]);
+    if (!userId) return;
+    const newTransactionRef = push(ref(db, `users/${userId}/transactions`));
+    set(newTransactionRef, transaction);
   };
 
   const updateTransaction = (updatedTransaction: Transaction) => {
-    setTransactions(prev =>
-      prev.map(t => (t.id === updatedTransaction.id ? updatedTransaction : t))
-    );
+    if (!userId) return;
+    const { id, ...data } = updatedTransaction;
+    set(ref(db, `users/${userId}/transactions/${id}`), data);
   };
 
   const deleteTransaction = (id: string) => {
-    setTransactions(prev => prev.filter(t => t.id !== id));
+    if (!userId) return;
+    remove(ref(db, `users/${userId}/transactions/${id}`));
   };
 
   const addCategory = (category: Omit<Category, 'id'>) => {
-    const newCategory = { ...category, id: `cat_${new Date().toISOString()}` };
-    setCategories(prev => [...prev, newCategory]);
+     if (!userId) return;
+    const newCategoryRef = push(ref(db, `users/${userId}/categories`));
+    set(newCategoryRef, category);
   };
 
   const deleteCategory = (id: string) => {
-    setCategories(prev => prev.filter(c => c.id !== id));
+    if (!userId) return;
+    // Check if default category
+    if(defaultCategories.some(c => c.id === id)) return;
+    remove(ref(db, `users/${userId}/categories/${id}`));
   };
 
   return (

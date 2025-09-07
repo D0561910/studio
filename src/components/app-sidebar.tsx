@@ -9,14 +9,29 @@ import {
   SidebarMenuItem,
   SidebarSeparator
 } from '@/components/ui/sidebar';
-import { Wallet, Home, PieChart, Shapes, ArrowRightLeft } from 'lucide-react';
+import { Wallet, Home, PieChart, Shapes, ArrowRightLeft, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CategoryManager } from './category-manager';
 import { BudgetToolDialog } from './budget-tool-dialog';
 import { DataExport } from './data-export';
 import Link from 'next/link';
+import { getAuth, signOut } from 'firebase/auth';
+import { useToast } from '@/hooks/use-toast';
+
 
 export function AppSidebar() {
+  const { toast } = useToast();
+  const auth = getAuth();
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      toast({ title: 'Success', description: 'Logged out successfully.'});
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to log out.'});
+    }
+  };
+
   return (
     <Sidebar>
       <SidebarHeader className="p-4">
@@ -73,6 +88,11 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter className="p-2">
         <DataExport />
+         <SidebarSeparator />
+        <Button variant="ghost" className="w-full justify-start" onClick={handleLogout}>
+          <LogOut className="mr-2 h-4 w-4" />
+          Logout
+        </Button>
       </SidebarFooter>
     </Sidebar>
   );

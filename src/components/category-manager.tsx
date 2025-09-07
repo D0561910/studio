@@ -62,9 +62,28 @@ export function CategoryManager() {
         });
         return;
     }
+    if(defaultCategories.some(c => c.id === id)) {
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Cannot delete a default category."
+        });
+        return;
+    }
     deleteCategory(id);
     toast({ title: 'Success', description: 'Category deleted.' });
   }
+
+  const defaultCategories = [
+    { id: 'cat_1', name: 'Groceries', icon: 'groceries' },
+    { id: 'cat_2', name: 'Transport', icon: 'transport' },
+    { id: 'cat_3', name: 'Housing', icon: 'housing' },
+    { id: 'cat_4', name: 'Entertainment', icon: 'entertainment' },
+    { id: 'cat_5', name: 'Salary', icon: 'salary' },
+    { id: 'cat_6', name: 'Bills', icon: 'bills' },
+    { id: 'cat_7', name: 'Shopping', icon: 'shopping'},
+    { id: 'cat_8', name: 'Other', icon: 'other' },
+  ];
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -92,9 +111,11 @@ export function CategoryManager() {
                       <Icon className="h-5 w-5" />
                       <span>{cat.name}</span>
                     </div>
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDelete(cat.id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    {!defaultCategories.some(c => c.id === cat.id) && (
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDelete(cat.id)}>
+                            <Trash2 className="h-4 w-4" />
+                        </Button>
+                    )}
                   </div>
                 );
               })}
