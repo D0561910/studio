@@ -46,11 +46,11 @@ export function Header() {
           <h1 className="text-lg font-semibold md:text-2xl">{title}</h1>
         
       </div>
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 md:gap-4">
         <TransactionDialog>
             <Button size="sm" className="gap-1">
             <PlusCircle className="h-4 w-4" />
-            <span className="sr-only sm:not-sr-only">Add Transaction</span>
+            <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">Add Transaction</span>
             </Button>
         </TransactionDialog>
         {user && (

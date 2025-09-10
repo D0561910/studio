@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Wallet, Loader2 } from 'lucide-react';
-import { Icons } from '@/components/icons';
 
 
 const GoogleIcon = () => (
@@ -61,23 +60,24 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
-        <div className="flex items-center gap-2 mb-4">
-            <Wallet className="w-10 h-10 text-primary" />
-            <h1 className="text-4xl font-semibold">BudgetWise</h1>
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4 sm:p-6 lg:p-8">
+        <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
+            <div className="flex flex-col space-y-2 text-center">
+                <div className="flex items-center justify-center gap-2 mb-4">
+                    <Wallet className="w-10 h-10 text-primary" />
+                    <h1 className="text-4xl font-semibold">BudgetWise</h1>
+                </div>
+                <p className="text-muted-foreground">Sign in to your account to continue</p>
+            </div>
+            <Card>
+                <CardContent className="p-6">
+                <Button onClick={handleGoogleSignIn} disabled={isLoading} className="w-full">
+                    {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon />}
+                    Sign in with Google
+                </Button>
+                </CardContent>
+            </Card>
         </div>
-      <Card className="w-full max-w-sm">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Welcome</CardTitle>
-          <CardDescription>Sign in to your account to continue</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button onClick={handleGoogleSignIn} disabled={isLoading} className="w-full">
-            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon />}
-            Sign in with Google
-          </Button>
-        </CardContent>
-      </Card>
     </div>
   );
 }
