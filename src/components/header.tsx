@@ -47,12 +47,14 @@ export function Header() {
         
       </div>
       <div className="flex items-center gap-2 md:gap-4">
-        <TransactionDialog>
-            <Button size="sm" className="gap-1">
-            <PlusCircle className="h-4 w-4" />
-            <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">Add Transaction</span>
-            </Button>
-        </TransactionDialog>
+        <div className="hidden md:block">
+            <TransactionDialog>
+                <Button size="sm" className="gap-1">
+                <PlusCircle className="h-4 w-4" />
+                <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">Add Transaction</span>
+                </Button>
+            </TransactionDialog>
+        </div>
         {user && (
            <DropdownMenu>
               <DropdownMenuTrigger asChild>
