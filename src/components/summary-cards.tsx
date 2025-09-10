@@ -9,6 +9,8 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
 } from "@/components/ui/carousel"
 
 export function SummaryCards() {
@@ -55,7 +57,12 @@ export function SummaryCards() {
     <>
       {/* Mobile View: Carousel */}
       <div className="md:hidden">
-        <Carousel className="w-full">
+        <Carousel 
+          className="w-full max-w-xs mx-auto"
+          opts={{
+            align: "start",
+          }}
+        >
           <CarouselContent>
             {cards.map((card, index) => (
               <CarouselItem key={index}>
@@ -75,6 +82,8 @@ export function SummaryCards() {
               </CarouselItem>
             ))}
           </CarouselContent>
+          <CarouselPrevious />
+          <CarouselNext />
         </Carousel>
       </div>
 
