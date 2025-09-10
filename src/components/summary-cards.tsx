@@ -5,6 +5,11 @@ import { ArrowUpCircle, ArrowDownCircle, Scale } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAppContext } from '@/contexts/app-context';
 import { formatCurrency } from '@/lib/utils';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from "@/components/ui/carousel"
 
 export function SummaryCards() {
   const { transactions } = useAppContext();
@@ -25,37 +30,70 @@ export function SummaryCards() {
 
   const balance = summary.income - summary.expense;
 
+  const cards = [
+    {
+      title: 'Total Income',
+      amount: summary.income,
+      icon: <ArrowUpCircle className="h-4 w-4 text-green-500" />,
+      amountClass: '',
+    },
+    {
+      title: 'Total Expenses',
+      amount: summary.expense,
+      icon: <ArrowDownCircle className="h-4 w-4 text-red-500" />,
+      amountClass: '',
+    },
+    {
+      title: 'Balance',
+      amount: balance,
+      icon: <Scale className="h-4 w-4 text-muted-foreground" />,
+      amountClass: balance >= 0 ? 'text-green-600' : 'text-red-600',
+    },
+  ];
+
   return (
-    <div className="grid gap-4 md:grid-cols-3">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Income</CardTitle>
-          <ArrowUpCircle className="h-4 w-4 text-green-500" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{formatCurrency(summary.income)}</div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
-          <ArrowDownCircle className="h-4 w-4 text-red-500" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{formatCurrency(summary.expense)}</div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Balance</CardTitle>
-          <Scale className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className={`text-2xl font-bold ${balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-            {formatCurrency(balance)}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+    <>
+      {/* Mobile View: Carousel */}
+      <div className="md:hidden">
+        <Carousel className="w-full">
+          <CarouselContent>
+            {cards.map((card, index) => (
+              <CarouselItem key={index}>
+                 <div className="p-1">
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">{card.title}</CardTitle>
+                            {card.icon}
+                        </CardHeader>
+                        <CardContent>
+                            <div className={`text-2xl font-bold ${card.amountClass}`}>
+                                {formatCurrency(card.amount)}
+                            </div>
+                        </CardContent>
+                    </Card>
+                 </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+        </Carousel>
+      </div>
+
+      {/* Desktop View: Grid */}
+      <div className="hidden md:grid md:grid-cols-3 gap-4">
+        {cards.map((card, index) => (
+          <Card key={index}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">{card.title}</CardTitle>
+              {card.icon}
+            </CardHeader>
+            <CardContent>
+              <div className={`text-2xl font-bold ${card.amountClass}`}>
+                {formatCurrency(card.amount)}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </>
   );
 }
